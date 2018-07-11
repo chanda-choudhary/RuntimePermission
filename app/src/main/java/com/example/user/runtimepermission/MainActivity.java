@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -15,11 +16,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CAMERA=125;
     private static final int REQUEST_STORSGE=225;
     private static final int REQUEST_CONTACTS=325;
+    private static final int REQUEST_GROUP_PERMISSION=425;
 
     private static final int TXT_CAMERA=1;
     private static final int TXT_STORAGE=2;
@@ -110,6 +114,15 @@ public class MainActivity extends AppCompatActivity {
         });
         AlertDialog alertDialog=builder.create();
         alertDialog.show();
+    }
+
+    //Request Group Permission
+    public void requestGroupPermission(ArrayList<String> permissions)
+    {
+        String[] permissionList=new String[permissions.size()];
+        permissions.toArray(permissionList);
+
+        ActivityCompat.requestPermissions(MainActivity.this,permissionList,REQUEST_GROUP_PERMISSION);
     }
 
 
@@ -206,5 +219,97 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         }
     }
+
+    public void requestAllPermission(View view) {
+        ArrayList<String> permissionsNeeded=new ArrayList<>();
+        ArrayList<String> permissionsAvailable=new ArrayList<>();
+        permissionsAvailable.add(Manifest.permission.CAMERA);
+        permissionsAvailable.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        permissionsAvailable.add(Manifest.permission.READ_CONTACTS);
+
+        for (String permission:permissionsAvailable)
+        {
+            if (ContextCompat.checkSelfPermission(this,permission)!=PackageManager.PERMISSION_GRANTED)
+                permissionsNeeded.add(permission);
+        }
+        requestGroupPermission(permissionsNeeded);
+    }
     //****************************************************************
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode)
+        {
+            case REQUEST_CAMERA:
+                if (grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED)
+                {
+                    Toast.makeText(this,"You have Camera permission.",Toast.LENGTH_LONG).show();
+                    Intent intent=new Intent(this,ResultActivity.class);
+                    intent.putExtra("message","You can now take photos and record videos.");
+                    startActivity(intent);
+                }
+                else
+                {
+                    Toast.makeText(this,"Camera Permission is denied.Turn off Camera modules of the app.",Toast.LENGTH_LONG).show();
+                }
+                break;
+
+            case REQUEST_CONTACTS:
+                if (grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED)
+                {
+                    Toast.makeText(this,"You have Contacts permission.",Toast.LENGTH_LONG).show();
+                    Intent intent=new Intent(this,ResultActivity.class);
+                    intent.putExtra("message","Now you can read Contacts availabe on this device.");
+                    startActivity(intent);
+                }
+                else
+                {
+                    Toast.makeText(this,"Read Contacts Permission is denied.Turn off Read Contacts modules of the app.",Toast.LENGTH_LONG).show();
+                }
+                break;
+
+            case REQUEST_STORSGE:
+                if (grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED)
+                {
+                    Toast.makeText(this,"You have Storage permission.",Toast.LENGTH_LONG).show();
+                    Intent intent=new Intent(this,ResultActivity.class);
+                    intent.putExtra("message","Now you can write to the storage of this device.");
+                    startActivity(intent);
+                }
+                else
+                {
+                    Toast.makeText(this,"Storage Permission is denied.Turn off read Storage modules of the app.",Toast.LENGTH_LONG).show();
+                }
+                break;
+
+            case REQUEST_GROUP_PERMISSION:
+                String result="";
+                int i=0;
+                for (String permis:permissions)
+                {
+                    String status="";
+                    if(grantResults[i]==PackageManager.PERMISSION_GRANTED)
+                        status="Granted";
+                    else
+                        status="Denied";
+                    result=result+"\n"+permis+" : "+status;
+                    i++;
+                }
+                AlertDialog.Builder builder=new AlertDialog.Builder(this);
+                builder.setTitle("Group Permission Details");
+                builder.setMessage(result);
+                builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                });
+                AlertDialog alertDialog=builder.create();
+                alertDialog.show();
+                Toast.makeText(this,result,Toast.LENGTH_LONG).show();
+                break;
+        }
+
+    }
 }
