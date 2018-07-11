@@ -31,6 +31,10 @@ public class PermissionUtil {
                 editor.putBoolean(context.getString(R.string.permission_contacts),true);
                 editor.commit();
                 break;
+            case "read storage":
+                editor.putBoolean(context.getString(R.string.permission_read_storage),true);
+                editor.commit();
+                break;
         }
     }
     public boolean checkPermissionPreference(String permission)
@@ -46,6 +50,9 @@ public class PermissionUtil {
                 break;
             case "contacts":
                 isShown=sharedPreferences.getBoolean(context.getString(R.string.permission_contacts),false);
+                break;
+            case "read storage":
+                isShown=sharedPreferences.getBoolean(context.getString(R.string.permission_read_storage),false);
                 break;
         }
         return isShown;

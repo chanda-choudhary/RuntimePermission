@@ -24,10 +24,14 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_STORSGE=225;
     private static final int REQUEST_CONTACTS=325;
     private static final int REQUEST_GROUP_PERMISSION=425;
+    private static final int REQUEST_READ_STORSGE=525;
+
+
 
     private static final int TXT_CAMERA=1;
     private static final int TXT_STORAGE=2;
     private static final int TXT_CONTACTS=3;
+    private static final int TXT_READ_STORAGE=4;
 
     private PermissionUtil permissionUtil;
 
@@ -53,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
             case TXT_CONTACTS:
                 status= ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS);
                 break;
+            case TXT_READ_STORAGE:
+                status=ContextCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE);
+                break;
         }
         return status;
     }
@@ -71,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
             case TXT_CONTACTS:
                 ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_CONTACTS},REQUEST_CONTACTS);
                 break;
+            case TXT_READ_STORAGE:
+                ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},REQUEST_READ_STORSGE);
         }
     }
 
@@ -95,6 +104,12 @@ public class MainActivity extends AppCompatActivity {
             builder.setMessage("This app need to access your Contacts..Please allow");
             builder.setTitle("Contacts Permission Needed..");
         }
+        else if (permission==TXT_READ_STORAGE)
+        {
+            builder.setMessage("This app need to read from your device storage..Please allow");
+            builder.setTitle("Read Storage Permission Needed..");
+        }
+
         builder.setPositiveButton("Allow", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
@@ -104,6 +119,8 @@ public class MainActivity extends AppCompatActivity {
                     requestPermission(TXT_STORAGE);
                 else if (permission==TXT_CONTACTS)
                     requestPermission(TXT_CONTACTS);
+                else if (permission==TXT_READ_STORAGE)
+                    requestPermission(TXT_READ_STORAGE);
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -185,6 +202,38 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this,"You have storage permission",Toast.LENGTH_LONG).show();
             Intent intent=new Intent(this,ResultActivity.class);
             intent.putExtra("message","Now you can write to the storage of this device..");
+            startActivity(intent);
+        }
+    }
+
+    //Read External Storage
+    public void readExternalStorage(View view) {
+        if(checkPermission(TXT_READ_STORAGE)!=PackageManager.PERMISSION_GRANTED)
+        {
+            if(ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,Manifest.permission.READ_EXTERNAL_STORAGE))
+            {
+                showPermissionExplanation(TXT_READ_STORAGE);
+            }
+            else if(!permissionUtil.checkPermissionPreference("read storage"))
+            {
+                requestPermission(TXT_READ_STORAGE);
+                permissionUtil.updatePermissionPreference("read storage");
+            }
+            else
+            {
+                Toast.makeText(this,"Please allow read storage permission in your app settings",Toast.LENGTH_LONG).show();
+                Intent intent=new Intent();
+                intent.setAction((Settings.ACTION_APPLICATION_DETAILS_SETTINGS));
+                Uri uri=Uri.fromParts("package",this.getPackageName(),null);
+                intent.setData(uri);
+                this.startActivity(intent);
+            }
+        }
+        else
+        {
+            Toast.makeText(this,"You have read storage permission",Toast.LENGTH_LONG).show();
+            Intent intent=new Intent(this,ResultActivity.class);
+            intent.putExtra("message","Now you can read from the storage of this device..");
             startActivity(intent);
         }
     }
@@ -279,7 +328,21 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else
                 {
-                    Toast.makeText(this,"Storage Permission is denied.Turn off read Storage modules of the app.",Toast.LENGTH_LONG).show();
+                    Toast.makeText(this,"Write External Storage Permission is denied.Turn off Storage modules of the app.",Toast.LENGTH_LONG).show();
+                }
+                break;
+
+            case REQUEST_READ_STORSGE:
+                if (grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED)
+                {
+                    Toast.makeText(this,"You have Storage permission.",Toast.LENGTH_LONG).show();
+                    Intent intent=new Intent(this,ResultActivity.class);
+                    intent.putExtra("message","Now you can read storage from this device.");
+                    startActivity(intent);
+                }
+                else
+                {
+                    Toast.makeText(this,"Read External Storage Permission is denied.Turn off Storage modules of the app.",Toast.LENGTH_LONG).show();
                 }
                 break;
 
@@ -312,4 +375,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+
 }
